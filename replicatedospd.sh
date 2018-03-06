@@ -5,6 +5,7 @@ if [[ -n "$1" ]]; then echo "starting"; else echo "Missing Target IP" && exit; f
 
 Target=$1
 ssh-copy-id root@$1
+sudo yum -y install rsync
 rpm -qa  > repo
 scp repo root@$1:/root/
 scp /etc/hosts root@1:/etc/
@@ -21,7 +22,8 @@ ssh $Target systemctl enable --now libvirtd
 VmList=`sudo virsh list | awk '{print $2}' | grep -v ^$| grep -v Name`
 for n in $VmList; do virsh dumpxml $n >/var/lib/libvirt/images/$n.xml ; done
 for n in $VmList; do virsh suspend $n ; done
-scp /var/lib/libvirt/images/* root@$1:/var/lib/libvirt/images/
+#scp /var/lib/libvirt/images/* root@$1:/var/lib/libvirt/images/
+time rsync -arvh --progress /var/lib/libvirt/images/* root@$1:/var/lib/libvirt/images/
 
 Networks=`sudo virsh net-list | grep active | awk '{print $1}' | grep -v default`
 for net in $Networks ; do sudo virsh net-dumpxml $net  > $net.xml; done
