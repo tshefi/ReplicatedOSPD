@@ -23,7 +23,7 @@ VmList=`sudo virsh list | awk '{print $2}' | grep -v ^$| grep -v Name`
 for n in $VmList; do virsh dumpxml $n >/var/lib/libvirt/images/$n.xml ; done
 for n in $VmList; do virsh suspend $n ; done
 #scp /var/lib/libvirt/images/* root@$1:/var/lib/libvirt/images/
-time rsync -arvh --progress /var/lib/libvirt/images/* root@$1:/var/lib/libvirt/images/
+time rsync -arvhW --progress /var/lib/libvirt/images/* root@$1:/var/lib/libvirt/images/
 
 Networks=`sudo virsh net-list | grep active | awk '{print $1}' | grep -v default`
 for net in $Networks ; do sudo virsh net-dumpxml $net  > $net.xml; done
