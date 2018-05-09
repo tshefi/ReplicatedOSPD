@@ -1,11 +1,17 @@
 #!/bin/bash
-# replicateospd.sh IPOfTargetHost
+# Crude replication of an exiting virt OPSD deployment to new host.
+# Note due to restart of controller node on source server, you'll need to recover Cinder lvm VG on both source/target
+#
+# How to use, execute script with IP of target server (should be a clean OS)
+# ->  replicateospd.sh IPOfTargetHost
 
 if [[ -n "$1" ]]; then echo "starting"; else echo "Missing Target IP" && exit; fi
 
 Target=$1
 ssh-copy-id root@$1
 sudo yum -y install rsync
+ssh $Target rm -rf /etc/yum.repos.d/*.repo
+scp /etc/yum.repos.d/* root@1:/etc/yum.repos.d/.
 rpm -qa  > repo
 scp repo root@$1:/root/
 scp /etc/hosts root@1:/etc/
@@ -36,3 +42,6 @@ ssh $Target 'for n in $(ls /var/lib/libvirt/images/*.xml); do virsh define $n ; 
 ssh $Target 'virsh start undercloud-0'
 #sleep 1m
 #ssh $Target '(virsh list --all | awk '{print $2}' | grep -v ^$| grep -v Name | grep -v undercloud-0) > vms'
+
+#Resume VMs on source host
+for n in $(ls /var/lib/libvirt/images/*.xml); do virsh resume $n ; done
